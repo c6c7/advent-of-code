@@ -32,16 +32,31 @@ fn fmt_dur(dur: Duration) -> String {
 fn main() {
     // Get day string
     let args: Vec<String> = env::args().collect();
+    let mut year = String::new();
     let mut day = String::new();
 
     if args.len() >= 2 {
-        day = args[1].clone();
+        year = args[1].clone();
+        day = args[2].clone();
     } else {
+        println!("Enter year: ");
+        io::stdin()
+            .read_line(&mut year)
+            .expect("Failed to read line");
         println!("Enter day: ");
         io::stdin()
             .read_line(&mut day)
             .expect("Failed to read line");
     }
+    // Parse year as number
+    year = year.trim().to_string();
+    let year_num: u32 = match year.parse() {
+        Ok(num) => num,
+        Err(_) => {
+            println!("Invalid year number: {}", year);
+            return;
+        },
+    };
     // Parse day as number
     day = day.trim().to_string();
     let day_num: u32 = match day.parse() {
@@ -55,14 +70,14 @@ fn main() {
     let cwd = env::current_dir().unwrap();
     let filename = cwd
         .join("inputs")
-        .join(format!("day{:02}.txt", day_num));
+        .join(format!("year{:04}/day{:02}.txt", year_num, day_num));
     println!("Reading {}", filename.display());
     let input = fs::read_to_string(filename)
         .expect("Error while reading");
 
     // Get corresponding function
 
-    let to_run = get_day(day_num);
+    let to_run = get_day(year_num, day_num);
     // Time it
     if to_run.0 != noop {
         println!("Running Part 1");
