@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
 use std::io;
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 use advent_of_code::{get_day, noop};
 
@@ -55,7 +55,7 @@ fn main() {
         Err(_) => {
             println!("Invalid year number: {}", year);
             return;
-        },
+        }
     };
     // Parse day as number
     day = day.trim().to_string();
@@ -64,7 +64,7 @@ fn main() {
         Err(_) => {
             println!("Invalid day number: {}", day);
             return;
-        },
+        }
     };
     // Read input file
     let cwd = env::current_dir().unwrap();
@@ -72,8 +72,7 @@ fn main() {
         .join("inputs")
         .join(format!("year{:04}/day{:02}.txt", year_num, day_num));
     println!("Reading {}", filename.display());
-    let input = fs::read_to_string(filename)
-        .expect("Error while reading");
+    let input = fs::read_to_string(filename).expect("Error while reading");
 
     // Get corresponding function
 
