@@ -19,4 +19,4 @@
 #  If no arguments are given, user will be prompted for the day on stdin. 
 # Your code will be passed the input and timed automatically.
 
-cargo run 2015 1
+# cargo run 2021 1
