@@ -16,10 +16,8 @@ pub fn get_day(year: u32, day: u32) -> (DayFn, DayFn) {
 
 pub fn split_whitespace_and_convert_to_i64<'a>(
     input: &'a String,
-) -> Box<dyn Iterator<Item = i64> + 'a> {
-    Box::new(
-        input
-            .split_whitespace()
-            .map(|s| s.parse::<i64>().expect("Could not convert str to i64.")),
-    )
+) -> impl Iterator<Item = i64> + 'a {
+    input
+        .split_whitespace()
+        .map(|s| s.parse::<i64>().expect("Could not convert str to i64."))
 }

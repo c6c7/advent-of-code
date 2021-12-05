@@ -1,9 +1,6 @@
 use crate::split_whitespace_and_convert_to_i64;
 
-fn number_increasing<'a>(
-    last: Box<dyn Iterator<Item = i64> + 'a>,
-    cur: Box<dyn Iterator<Item = i64> + 'a>,
-) -> usize {
+fn number_increasing(last: impl Iterator<Item = i64>, cur: impl Iterator<Item = i64>) -> usize {
     cur.zip(last).fold(0, |increasing_count, (cur, last)| {
         if cur > last {
             increasing_count + 1
@@ -24,7 +21,7 @@ pub fn part1(input: String) {
     println!("Number increasing: {}", number_increasing(last, cur),);
 }
 
-fn window_sums<'a>(input: &'a String) -> Box<dyn Iterator<Item = i64> + 'a> {
+fn window_sums<'a>(input: &'a String) -> impl Iterator<Item = i64> + 'a {
     let depths0 = split_whitespace_and_convert_to_i64(input);
     let mut depths1 = split_whitespace_and_convert_to_i64(input);
     depths1.next();
@@ -34,12 +31,10 @@ fn window_sums<'a>(input: &'a String) -> Box<dyn Iterator<Item = i64> + 'a> {
     depths2.next();
     let depths2 = depths2;
 
-    Box::new(
-        depths0
-            .zip(depths1)
-            .zip(depths2)
-            .map(|((a, b), c)| a + b + c),
-    )
+    depths0
+        .zip(depths1)
+        .zip(depths2)
+        .map(|((a, b), c)| a + b + c)
 }
 
 pub fn part2(input: String) {
