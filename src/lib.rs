@@ -7,6 +7,7 @@ pub type DayFn = fn(String);
 pub fn get_day(year: u32, day: u32) -> (DayFn, DayFn) {
     return match (year, day) {
         (2021, 1) => (year2021::day01::part1, year2021::day01::part2),
+        (2021, 2) => (year2021::day02::part1, noop),
         _ => {
             println!("Unknown day: {}", day);
             return (noop, noop);
