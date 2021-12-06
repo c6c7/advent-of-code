@@ -13,6 +13,21 @@ enum BoardSpot {
 #[derive(Debug)]
 struct Board([[BoardSpot; 5]; 5]);
 
+impl std::fmt::Display for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for i in 0..5 {
+            for j in 0..5 {
+                match self.0[i][j] {
+                    BoardSpot::Marked(n) => write!(f, "{:02}-M ", n)?,
+                    BoardSpot::Unmarked(n) => write!(f, "{:02}-U ", n)?,
+                }
+            }
+            write!(f, "\n")?
+        }
+        Ok(())
+    }
+}
+
 impl Board {
     fn new(board_str: &str) -> Board {
         let mut board = Board([[BoardSpot::Unmarked(0); 5]; 5]);
@@ -148,6 +163,7 @@ pub fn part1(input: String) {
         all_boards.iter_mut().try_for_each(|(i, board)| {
             board.mark(number);
             if board.bingo() {
+                println!("Just called: {}", number);
                 println!("Bingo on: {}", i);
                 println!("Puzzle Answer: {}", board.sum_unmarked() * (number as u64));
                 return Err(());
@@ -155,6 +171,49 @@ pub fn part1(input: String) {
             return Ok(());
         })
     });
+}
+
+pub fn part2(input: String) {
+    let mut parts = input.split("\n\n");
+    let number_order = parse_number_order(parts.next().unwrap());
+    println!("Number Order: {:?}", number_order);
+    let mut all_boards = parts
+        .enumerate()
+        .fold(vec![], |mut all_boards, (i, board_str)| {
+            all_boards.push((i, Board::new(board_str)));
+            all_boards
+        });
+
+    let mut final_board: Option<(usize, Board)> = None;
+    for number in number_order {
+        match final_board {
+            None => {
+                all_boards.iter_mut().for_each(|(_, board)| {
+                    board.mark(number);
+                });
+                all_boards = all_boards
+                    .into_iter()
+                    .filter(|(_, board)| !board.bingo())
+                    .collect();
+                println!("Just called: {}", number);
+                println!("Boards left: {}", all_boards.len());
+                if all_boards.len() == 1 {
+                    println!("Shifting to last board mode.");
+                    final_board.replace(all_boards.remove(0));
+                }
+            }
+            Some((i, ref mut board)) => {
+                board.mark(number);
+                if board.bingo() {
+                    println!("Just called: {}", number);
+                    println!("Last bingo on: {}", i);
+                    println!("{}", board);
+                    println!("Puzzle Answer: {}", board.sum_unmarked() * (number as u64));
+                    return;
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
