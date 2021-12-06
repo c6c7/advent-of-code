@@ -69,33 +69,33 @@ impl Board {
         false
     }
 
-    fn down_diagonal_bingo(&self) -> bool {
-        let mut bingo = true;
-        for i in 0..5 {
-            match self.0[i][i] {
-                BoardSpot::Unmarked(_) => {
-                    bingo = false;
-                    break;
-                }
-                BoardSpot::Marked(_) => continue,
-            }
-        }
-        bingo
-    }
+    // fn down_diagonal_bingo(&self) -> bool {
+    //     let mut bingo = true;
+    //     for i in 0..5 {
+    //         match self.0[i][i] {
+    //             BoardSpot::Unmarked(_) => {
+    //                 bingo = false;
+    //                 break;
+    //             }
+    //             BoardSpot::Marked(_) => continue,
+    //         }
+    //     }
+    //     bingo
+    // }
 
-    fn up_diagonal_bingo(&self) -> bool {
-        let mut bingo = true;
-        for i in 0..5 {
-            match self.0[5 - 1 - i][i] {
-                BoardSpot::Unmarked(_) => {
-                    bingo = false;
-                    break;
-                }
-                BoardSpot::Marked(_) => continue,
-            }
-        }
-        bingo
-    }
+    // fn up_diagonal_bingo(&self) -> bool {
+    //     let mut bingo = true;
+    //     for i in 0..5 {
+    //         match self.0[5 - 1 - i][i] {
+    //             BoardSpot::Unmarked(_) => {
+    //                 bingo = false;
+    //                 break;
+    //             }
+    //             BoardSpot::Marked(_) => continue,
+    //         }
+    //     }
+    //     bingo
+    // }
 
     fn mark(&mut self, number: u8) {
         for i in 0..5 {
@@ -114,10 +114,9 @@ impl Board {
     }
 
     fn bingo(&self) -> bool {
-        self.horizontal_bingo()
-            || self.vertical_bingo()
-            || self.down_diagonal_bingo()
-            || self.up_diagonal_bingo()
+        self.horizontal_bingo() || self.vertical_bingo()
+        // || self.down_diagonal_bingo()
+        // || self.up_diagonal_bingo()
     }
 
     fn sum_unmarked(&self) -> u64 {
@@ -274,67 +273,67 @@ mod test {
         assert!(board.vertical_bingo());
     }
 
-    #[test]
-    fn simple_down_diagonal() {
-        let mut board = Board::new(
-            r#"
-1 2 2 2 2
-2 1 2 2 2
-2 2 1 2 2
-2 2 2 1 2
-2 2 2 2 1
-"#,
-        );
-        assert!(!board.down_diagonal_bingo());
-        board.mark(1);
-        assert!(board.down_diagonal_bingo());
-    }
+    // #[test]
+    //     fn simple_down_diagonal() {
+    //         let mut board = Board::new(
+    //             r#"
+    // 1 2 2 2 2
+    // 2 1 2 2 2
+    // 2 2 1 2 2
+    // 2 2 2 1 2
+    // 2 2 2 2 1
+    // "#,
+    //         );
+    //         assert!(!board.down_diagonal_bingo());
+    //         board.mark(1);
+    //         assert!(board.down_diagonal_bingo());
+    //     }
 
-    #[test]
-    fn different_number_down_diagonal() {
-        let mut board = Board::new(
-            r#"
-1 2 2 2 2
-2 3 2 2 2
-2 2 4 2 2
-2 2 2 5 2
-2 2 2 2 6
-"#,
-        );
-        assert!(!board.down_diagonal_bingo());
-        board.mark(1);
-        assert!(!board.down_diagonal_bingo());
-        board.mark(3);
-        assert!(!board.down_diagonal_bingo());
-        board.mark(4);
-        assert!(!board.down_diagonal_bingo());
-        board.mark(5);
-        assert!(!board.down_diagonal_bingo());
-        board.mark(6);
-        assert!(board.down_diagonal_bingo());
-    }
+    //     #[test]
+    //     fn different_number_down_diagonal() {
+    //         let mut board = Board::new(
+    //             r#"
+    // 1 2 2 2 2
+    // 2 3 2 2 2
+    // 2 2 4 2 2
+    // 2 2 2 5 2
+    // 2 2 2 2 6
+    // "#,
+    //         );
+    //         assert!(!board.down_diagonal_bingo());
+    //         board.mark(1);
+    //         assert!(!board.down_diagonal_bingo());
+    //         board.mark(3);
+    //         assert!(!board.down_diagonal_bingo());
+    //         board.mark(4);
+    //         assert!(!board.down_diagonal_bingo());
+    //         board.mark(5);
+    //         assert!(!board.down_diagonal_bingo());
+    //         board.mark(6);
+    //         assert!(board.down_diagonal_bingo());
+    //     }
 
-    #[test]
-    fn simple_up_diagonal() {
-        let mut board = Board::new(
-            r#"
-2 2 2 2 6
-2 2 2 5 2
-2 2 4 2 2
-2 3 2 2 2
-1 2 2 2 2
-"#,
-        );
-        assert!(!board.up_diagonal_bingo());
-        board.mark(1);
-        assert!(!board.up_diagonal_bingo());
-        board.mark(3);
-        assert!(!board.up_diagonal_bingo());
-        board.mark(4);
-        assert!(!board.up_diagonal_bingo());
-        board.mark(5);
-        assert!(!board.up_diagonal_bingo());
-        board.mark(6);
-        assert!(board.up_diagonal_bingo());
-    }
+    //     #[test]
+    //     fn simple_up_diagonal() {
+    //         let mut board = Board::new(
+    //             r#"
+    // 2 2 2 2 6
+    // 2 2 2 5 2
+    // 2 2 4 2 2
+    // 2 3 2 2 2
+    // 1 2 2 2 2
+    // "#,
+    //         );
+    //         assert!(!board.up_diagonal_bingo());
+    //         board.mark(1);
+    //         assert!(!board.up_diagonal_bingo());
+    //         board.mark(3);
+    //         assert!(!board.up_diagonal_bingo());
+    //         board.mark(4);
+    //         assert!(!board.up_diagonal_bingo());
+    //         board.mark(5);
+    //         assert!(!board.up_diagonal_bingo());
+    //         board.mark(6);
+    //         assert!(board.up_diagonal_bingo());
+    //     }
 }
