@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 
 struct CrabData {
-    min_pos: usize,
-    max_pos: usize,
-    total: usize,
-    crab_positions: HashMap<usize, usize>,
+    min_pos: i64,
+    max_pos: i64,
+    total: i64,
+    crab_positions: HashMap<i64, i64>,
 }
 
 #[derive(Debug)]
 struct Answer {
-    pos: usize,
-    min_fuel: usize,
+    pos: i64,
+    min_fuel: i64,
 }
 
 pub fn part1(input: String) {
@@ -49,6 +49,30 @@ pub fn part1(input: String) {
     println!("{:?}", answer);
 }
 
+pub fn part2(input: String) {
+    let crab_data = parse_crabs(&input);
+    let mut answer = Answer {
+        pos: 0,
+        min_fuel: calc_fuel_cost_part_2(&crab_data.crab_positions, 0),
+    };
+    for i in crab_data.min_pos + 1..crab_data.max_pos + 1 {
+        let at_fuel = calc_fuel_cost_part_2(&crab_data.crab_positions, i);
+        if at_fuel < answer.min_fuel {
+            answer = Answer {
+                pos: i,
+                min_fuel: at_fuel,
+            };
+        }
+    }
+    println!("{:?}", answer);
+}
+
+fn calc_fuel_cost_part_2(crab_positions: &HashMap<i64, i64>, pos: i64) -> i64 {
+    crab_positions.iter().fold(0, |acc, (key, val)| {
+        acc + ((key - pos).abs() * ((key - pos).abs() + 1)) / 2 * val
+    })
+}
+
 fn parse_crabs(input: &str) -> CrabData {
     let mut crab_positions = HashMap::new();
     let mut min_pos = None;
@@ -57,7 +81,7 @@ fn parse_crabs(input: &str) -> CrabData {
 
     input.trim().split(",").for_each(|p| {
         total += 1;
-        let p = p.parse::<usize>().unwrap();
+        let p = p.parse::<i64>().unwrap();
         match min_pos {
             None => min_pos = Some(p),
             Some(k) => {
