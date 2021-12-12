@@ -38,3 +38,30 @@ pub fn part1(input: String) {
     });
     println!("Syntax error score: {}", score);
 }
+
+pub fn part2(input: String) {
+    let open_chunk_list = input.split("\n").fold(vec![], |mut open_chunks_acc, l| {
+        if let ParseResult::Incomplete(open_chunk) = parse_chunks(l) {
+            open_chunks_acc.push(open_chunk);
+        }
+        open_chunks_acc
+    });
+
+    let mut scores = vec![];
+    for mut open_chunk in open_chunk_list {
+        let mut score = 0u64;
+        while !open_chunk.is_empty() {
+            score *= 5;
+            match open_chunk.pop().unwrap() {
+                '(' => score += 1,
+                '[' => score += 2,
+                '{' => score += 3,
+                '<' => score += 4,
+                _ => unreachable!(),
+            }
+        }
+        scores.push(score)
+    }
+    scores.sort();
+    println!("Answer: {}", scores[scores.len() / 2]);
+}
