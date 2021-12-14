@@ -6,17 +6,36 @@ type CavePath<'a> = Vec<Cave<'a>>;
 
 pub fn part1(input: String) {
     let mut cave_map = CaveMap::new();
+    let mut small_caves = HashSet::new();
     input.trim().split("\n").for_each(|l| {
         let mut parts = l.trim().split("-");
         let left = parts.next().unwrap();
+        if left.clone().to_lowercase() == left {
+            small_caves.insert(left);
+        }
         let right = parts.next().unwrap();
+        if right.clone().to_lowercase() == right {
+            small_caves.insert(right);
+        }
         insert_edge(&mut cave_map, left, right);
         insert_edge(&mut cave_map, right, left);
     });
 
     let mut all_paths = HashSet::new();
-    let mut root_path = vec![];
-    follow(&mut all_paths, &mut cave_map, &mut root_path, "start");
+
+    for small_cave in small_caves {
+        if small_cave == "start" || small_cave == "end" {
+            continue;
+        }
+        let (visits_remaining, _) = cave_map.get_mut(small_cave).unwrap();
+        *visits_remaining = 2;
+
+        let mut root_path = vec![];
+        follow(&mut all_paths, &mut cave_map, &mut root_path, "start");
+
+        let (visits_remaining, _) = cave_map.get_mut(small_cave).unwrap();
+        *visits_remaining = 1;
+    }
 
     println!("Number of paths: {}", all_paths.len());
 }
