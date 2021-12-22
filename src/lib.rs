@@ -1,3 +1,5 @@
+#![feature(map_into_keys_values)]
+
 pub mod year2021;
 
 pub fn noop(_inp: String) {}
@@ -20,6 +22,7 @@ pub fn get_day(year: u32, day: u32) -> (DayFn, DayFn) {
         (2021, 11) => (year2021::day11::part1, noop),
         (2021, 12) => (year2021::day12::part1, year2021::day12::part2),
         (2021, 13) => (year2021::day13::part1, noop),
+        (2021, 14) => (year2021::day14::part1, noop),
         _ => {
             println!("Unknown day: {}", day);
             return (noop, noop);
