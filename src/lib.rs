@@ -1,3 +1,5 @@
+#![feature(iter_array_chunks)]
+
 pub mod year2021;
 pub mod year2022;
 
