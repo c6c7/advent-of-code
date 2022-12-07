@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 fn parse_number_order(line: &str) -> Vec<u8> {
     line.split(",")
         .map(|n| n.parse::<u8>().expect("Unable to parse number into u8."))

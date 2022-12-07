@@ -31,15 +31,14 @@ pub fn get_day(year: u32, day: u32) -> (DayFn, DayFn) {
         (2022, 5) => (year2022::day05::part1, year2022::day05::part2),
         (2022, 6) => (year2022::day06::part1, year2022::day06::part2),
         _ => {
-            println!("Unknown day: {}", day);
-            return (noop, noop);
+            panic!("Unknown day: {}", day);
         }
     };
 }
 
-pub fn split_whitespace_and_convert_to_i64<'a>(
-    input: &'a String,
-) -> impl Iterator<Item = i64> + 'a {
+pub fn split_whitespace_and_convert_to_i64(
+    input: &str,
+) -> impl Iterator<Item = i64> + '_ {
     input
         .split_whitespace()
         .map(|s| s.parse::<i64>().expect("Could not convert str to i64."))

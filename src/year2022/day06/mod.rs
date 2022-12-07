@@ -25,6 +25,7 @@ fn remove_byte(map: &mut std::collections::HashMap<u8, usize>, b: &u8) {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct FirstMarker {
     characters: String,
     position: usize,

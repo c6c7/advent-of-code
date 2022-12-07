@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 const NUM_BINARY_DIGITS: usize = 12;
 
 fn calc_gamma_rate<'a>(input: impl Iterator<Item = u16> + 'a) -> u16 {

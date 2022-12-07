@@ -21,7 +21,7 @@ pub fn part1(input: String) {
     println!("Number increasing: {}", number_increasing(last, cur),);
 }
 
-fn window_sums<'a>(input: &'a String) -> impl Iterator<Item = i64> + 'a {
+fn window_sums(input: &str) -> impl Iterator<Item = i64> + '_ {
     let depths0 = split_whitespace_and_convert_to_i64(input);
     let mut depths1 = split_whitespace_and_convert_to_i64(input);
     depths1.next();

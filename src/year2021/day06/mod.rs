@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 const NEW_LANTERNFISH_INTERNAL_TIMER: usize = 9;
 const PART_1_SIMULATION_LENGTH: usize = 80; // days
 const PART_2_SIMULATION_LENGTH: usize = 256; // days

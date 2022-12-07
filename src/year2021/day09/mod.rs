@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 use std::collections::BinaryHeap;
 
 const INPUT_WIDTH: usize = 100;

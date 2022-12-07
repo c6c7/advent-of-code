@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 use std::convert::TryInto;
 
 const GRID_WIDTH: usize = 10;

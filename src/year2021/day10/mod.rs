@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 enum ParseResult {
     Incomplete(Vec<char>),
     SyntaxError(u32),

@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 fn parse_coordinates(input: &str) -> Vec<(usize, usize)> {
     input
         .split("\n\n")

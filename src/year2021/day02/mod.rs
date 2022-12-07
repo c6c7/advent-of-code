@@ -1,4 +1,6 @@
-fn parse_command<'a>(command: &'a str) -> (&'a str, i64) {
+#![allow(clippy::all)]
+
+fn parse_command(command: &str) -> (&str, i64) {
     let mut c = command.split_whitespace();
     let c_name = c
         .next()
@@ -8,8 +10,7 @@ fn parse_command<'a>(command: &'a str) -> (&'a str, i64) {
         .unwrap_or_else(|| panic!("Command missing second part: {}", command))
         .parse::<i64>()
         .expect("Failed to parse command value.");
-    c.next()
-        .map(|_| panic!("Command has unexpected third part: {}", command));
+    if c.next().is_some() { panic!("Command has unexpected third part: {}", command) }
     (c_name, c_value)
 }
 
@@ -17,7 +18,7 @@ pub fn part1(input: String) {
     let (final_horizontal, final_depth) =
         input
             .trim()
-            .split("\n")
+            .split('\n')
             .fold((0, 0), |(horizontal, depth), command| {
                 let (c_name, c_value) = parse_command(command);
                 // Increment the horizontal and depth values according
@@ -30,8 +31,8 @@ pub fn part1(input: String) {
                 }
             });
 
-    println!("Final Horizontal: {}", final_horizontal);
-    println!("Final Depth: {}", final_depth);
+    println!("Final Horizontal: {final_horizontal}");
+    println!("Final Depth: {final_depth}");
     println!("Puzzle Answer: {}", final_horizontal * final_depth);
 }
 
@@ -39,7 +40,7 @@ pub fn part2(input: String) {
     let (final_horizontal, final_depth, final_aim) =
         input
             .trim()
-            .split("\n")
+            .split('\n')
             .fold((0, 0, 0), |(horizontal, depth, aim), command| {
                 let (c_name, c_value) = parse_command(command);
                 // Increment the horizontal and depth values according

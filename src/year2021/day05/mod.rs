@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 fn parse_line(line: &str) -> ((usize, usize), (usize, usize)) {
     let mut parts = line.trim().split(" -> ");
     let mut begin_part = parts.next().unwrap().split(",");

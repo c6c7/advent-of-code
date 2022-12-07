@@ -3,7 +3,7 @@ use std::{
     collections::BinaryHeap,
 };
 
-#[derive(Default, Debug, Eq, PartialOrd, PartialEq)]
+#[derive(Default, Debug, Eq)]
 struct Elf {
     total: i64,
     snacks: Vec<i64>,
@@ -22,12 +22,24 @@ impl Ord for Elf {
     }
 }
 
+impl PartialOrd for Elf {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Elf {
+    fn eq(&self, other: &Self) -> bool {
+        self.total == other.total
+    }
+}
+
 fn build_elf_heap(input: String) -> BinaryHeap<Elf> {
     let mut elves = BinaryHeap::new();
 
     let mut elf = Elf::default();
-    for snack in input.split("\n") {
-        if snack == "" {
+    for snack in input.split('\n') {
+        if snack.is_empty() {
             elves.push(elf);
             elf = Elf::default();
             continue;
@@ -49,5 +61,5 @@ pub fn part2(input: String) {
     for _ in 0..3 {
         top3_total += elves.pop().unwrap().total;
     }
-    println!("Top 3 Total: {}", top3_total);
+    println!("Top 3 Total: {top3_total}");
 }

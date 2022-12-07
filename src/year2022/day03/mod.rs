@@ -34,21 +34,21 @@ fn find_duplicate(rucksack: &str) -> char {
 }
 
 pub fn part1(input: String) {
-    let rucksack_list = input.trim().split("\n");
+    let rucksack_list = input.trim().split('\n');
     let mut sum: usize = 0;
     for rucksack in rucksack_list {
         debug!("--- new rucksack ---");
-        debug!("duplicate: {}", find_duplicate(&rucksack));
+        debug!("duplicate: {}", find_duplicate(rucksack));
         rucksack.chars().for_each(|c| {
             debug!("{}: {}", c, priority(c));
         });
-        sum += priority(find_duplicate(&rucksack));
+        sum += priority(find_duplicate(rucksack));
     }
     info!("Part 1 Answer: {}", sum);
 }
 
 pub fn part2(input: String) {
-    let rucksack_list = input.trim().split("\n");
+    let rucksack_list = input.trim().split('\n');
     let mut sum = 0;
     for group in rucksack_list.array_chunks::<3>() {
         let mut rucksacks_with_item: [u8; 53] = [0; 53];
@@ -56,7 +56,7 @@ pub fn part2(input: String) {
         for rucksack in group {
             indicators.clear();
             debug!("rucksack: {:?}", rucksack);
-            for p in rucksack.chars().map(|c| priority(c)) {
+            for p in rucksack.chars().map(priority) {
                 indicators.insert(p);
             }
             debug!("indicators: {:?}", indicators);
@@ -69,9 +69,9 @@ pub fn part2(input: String) {
         }
 
         // Accumulate priority for item appearing in three rucksacks
-        for p in 1..53 {
-            if rucksacks_with_item[p] == 3 {
-                sum += p;
+        for (p, item) in rucksacks_with_item.iter().skip(1).enumerate() {
+            if *item == 3 {
+                sum += p + 1;
                 break;
             }
         }

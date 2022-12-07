@@ -1,35 +1,34 @@
 use {
-    advent_of_code::{get_day, noop},
+    advent_of_code::{get_day},
     std::{
         env, fs, io,
         time::{Duration, Instant},
     },
     tracing::{debug, info},
-    tracing_subscriber,
 };
 
 fn fmt_time(ms: f64) -> String {
     if ms <= 1.0 {
         let micro_sec = ms * 1000.0;
-        return String::from(format!("{}µs", micro_sec.round()));
+        return format!("{}µs", micro_sec.round());
     }
     if ms < 1000.0 {
         let whole_ms = ms.floor();
         let rem_ms = ms - whole_ms;
-        return String::from(format!("{}ms ", whole_ms) + &fmt_time(rem_ms));
+        return format!("{whole_ms}ms ") + &fmt_time(rem_ms);
     }
     let sec: f64 = ms / 1000.0;
     if sec < 60.0 {
         let whole_sec = sec.floor();
         let rem_ms = ms - whole_sec * 1000.0;
-        return format!("{}s ", whole_sec) + &fmt_time(rem_ms);
+        return format!("{whole_sec}s ") + &fmt_time(rem_ms);
     }
     let min: f64 = sec / 60.0;
-    return format!("{}m ", min.floor()) + &fmt_time((sec % 60.0) * 1000.0);
+    format!("{}m ", min.floor()) + &fmt_time((sec % 60.0) * 1000.0)
 }
 
 fn fmt_dur(dur: Duration) -> String {
-    return fmt_time(dur.as_secs_f64() * 1000.0);
+    fmt_time(dur.as_secs_f64() * 1000.0)
 }
 
 fn main() {
@@ -75,27 +74,23 @@ fn main() {
     let cwd = env::current_dir().unwrap();
     let filename = cwd
         .join("inputs")
-        .join(format!("year{:04}/day{:02}.txt", year_num, day_num));
+        .join(format!("year{year_num:04}/day{day_num:02}.txt"));
     info!("Reading {}", filename.display());
     let input = fs::read_to_string(filename).expect("Error while reading");
 
     // Get corresponding function
 
-    let to_run = get_day(year_num, day_num);
+    let (part1, part2) = get_day(year_num, day_num);
     // Time it
-    if to_run.0 != noop {
-        info!("Running Part 1");
-        let part1_start = Instant::now();
-        to_run.0(input.clone());
-        let part1_dur = part1_start.elapsed();
-        debug!("Took {}", fmt_dur(part1_dur));
-    }
+    info!("Running Part 1");
+    let part1_start = Instant::now();
+    part1(input.clone());
+    let part1_dur = part1_start.elapsed();
+    debug!("Took {}", fmt_dur(part1_dur));
 
-    if to_run.1 != noop {
-        info!("Running Part 2");
-        let part2_start = Instant::now();
-        to_run.1(input.clone());
-        let part2_dur = part2_start.elapsed();
-        debug!("Took {}", fmt_dur(part2_dur));
-    }
+    info!("Running Part 2");
+    let part2_start = Instant::now();
+    part2(input);
+    let part2_dur = part2_start.elapsed();
+    debug!("Took {}", fmt_dur(part2_dur));
 }
