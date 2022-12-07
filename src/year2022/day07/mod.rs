@@ -1,9 +1,11 @@
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    fmt,
-    hash::{Hash, Hasher},
-    rc::Rc,
+use {
+    std::{
+        cell::RefCell,
+        collections::{HashMap, HashSet},
+        fmt,
+        rc::Rc,
+    },
+    tracing::{debug, info},
 };
 
 struct Directory {
@@ -37,11 +39,6 @@ impl fmt::Debug for Directory {
             .field("file_children", &file_children)
             .finish()
     }
-}
-
-enum FsObject {
-    Directory(Directory),
-    File(File),
 }
 
 impl Directory {
@@ -81,6 +78,24 @@ impl Directory {
         }
         total
     }
+
+    fn part1_size_tracking(
+        parent: &Rc<RefCell<Directory>>,
+        dois: &mut Vec<Rc<RefCell<Directory>>>,
+    ) -> usize {
+        let mut total = 0;
+        for (_, f) in parent.as_ref().borrow().file_children.iter() {
+            total += f.size;
+        }
+        for (_, d) in parent.as_ref().borrow().directory_children.iter() {
+            let s = Directory::part1_size_tracking(&d, dois);
+            if s <= 100000 {
+                dois.push(d.clone());
+            }
+            total += s;
+        }
+        total
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -90,13 +105,98 @@ struct File {
     size: usize,
 }
 
-pub fn part1(input: String) {}
+pub fn part1(input: String) {
+    let cd_root_regex = regex::Regex::new(r"\$ cd /").unwrap();
+    let cd_parent_regex = regex::Regex::new(r"\$ cd \.\.").unwrap();
+    let cd_regex = regex::Regex::new(r"\$ cd (.*)").unwrap();
+    let dir_regex = regex::Regex::new(r"dir (.*)").unwrap();
+    let file_regex = regex::Regex::new(r"(\d+) (.*)").unwrap();
+    let ls_regex = regex::Regex::new(r"\$ ls").unwrap();
 
-pub fn part2(input: String) {}
+    let root_directory = Directory::new(None, "/");
+    let mut current_directory = root_directory.clone();
+
+    for line in input.trim().split('\n') {
+        if cd_root_regex.is_match(line) {
+            current_directory = root_directory.clone();
+            continue;
+        }
+        if ls_regex.is_match(line) {
+            continue;
+        }
+        if cd_parent_regex.is_match(line) {
+            let next_directory = current_directory
+                .as_ref()
+                .borrow()
+                .parent
+                .as_ref()
+                .unwrap()
+                .clone();
+            current_directory = next_directory;
+            continue;
+        }
+        if let Some(cd_cap) = cd_regex.captures(line) {
+            //debug!("cd_cap: {:?}", cd_cap);
+            let next_directory = current_directory
+                .as_ref()
+                .borrow()
+                .directory_children
+                .get(cd_cap.get(1).unwrap().as_str())
+                .unwrap()
+                .clone();
+            current_directory = next_directory;
+            continue;
+        }
+        if let Some(dir_cap) = dir_regex.captures(line) {
+            Directory::new(
+                Some(current_directory.clone()),
+                dir_cap.get(1).unwrap().as_str(),
+            );
+            continue;
+        }
+        if let Some(file_cap) = file_regex.captures(line) {
+            Directory::add_child_file(
+                current_directory.clone(),
+                File {
+                    parent: None,
+                    name: file_cap.get(2).unwrap().as_str().to_string(),
+                    size: file_cap.get(1).unwrap().as_str().parse::<usize>().unwrap(),
+                },
+            );
+            continue;
+        }
+        unreachable!()
+    }
+
+    debug!("Root directory: {:?}", root_directory.as_ref().borrow());
+    debug!("Root directory size: {}", Directory::size(&root_directory));
+
+    let mut dois = Vec::new();
+    if Directory::size(&root_directory) <= 100000 {
+        dois.push(root_directory.clone());
+    }
+    Directory::part1_size_tracking(&root_directory, &mut dois);
+
+    //debug!("DOIs: {:?}", dois);
+    debug!("DOIs len: {}", dois.len());
+    let mut doi_sizes = dois
+        .iter()
+        .map(|d| format!("{}-{}", d.as_ref().borrow().name, Directory::size(&d)))
+        .collect::<Vec<_>>();
+    doi_sizes.sort();
+    debug!("DOI sizes: {:?}", doi_sizes);
+
+    info!(
+        "Part 1 Answer: {}",
+        dois.iter().fold(0, |acc, d| acc + Directory::size(&d))
+    );
+}
+
+pub fn part2(_input: String) {}
 
 #[cfg(test)]
 mod tests {
-    use {super::*, tracing::debug, tracing_test::traced_test};
+    use {super::*, tracing_test::traced_test};
 
     #[test]
     #[traced_test]
