@@ -10,7 +10,9 @@ fn parse_command(command: &str) -> (&str, i64) {
         .unwrap_or_else(|| panic!("Command missing second part: {}", command))
         .parse::<i64>()
         .expect("Failed to parse command value.");
-    if c.next().is_some() { panic!("Command has unexpected third part: {}", command) }
+    if c.next().is_some() {
+        panic!("Command has unexpected third part: {}", command)
+    }
     (c_name, c_value)
 }
 

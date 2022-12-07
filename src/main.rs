@@ -1,5 +1,5 @@
 use {
-    advent_of_code::{get_day},
+    advent_of_code::get_day,
     std::{
         env, fs, io,
         time::{Duration, Instant},
