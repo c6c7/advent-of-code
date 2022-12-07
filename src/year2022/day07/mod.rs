@@ -70,6 +70,17 @@ impl Directory {
             .file_children
             .insert(child.name.clone(), child);
     }
+
+    fn size(parent: &Rc<RefCell<Directory>>) -> usize {
+        let mut total = 0;
+        for (_, f) in parent.as_ref().borrow().file_children.iter() {
+            total += f.size;
+        }
+        for (_, d) in parent.as_ref().borrow().directory_children.iter() {
+            total += Directory::size(&d);
+        }
+        total
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -145,5 +156,52 @@ mod tests {
         assert_eq!(1, root.as_ref().borrow().file_children.len());
 
         debug!("root: {:?}", root.as_ref().borrow());
+    }
+
+    #[test]
+    #[traced_test]
+    fn simple_size() {
+        let f = File {
+            parent: None,
+            name: "a".to_string(),
+            size: 1000,
+        };
+        let root = Directory::new(None, "root");
+        Directory::add_child_file(root.clone(), f);
+        assert_eq!(1000, Directory::size(&root));
+    }
+
+    #[test]
+    #[traced_test]
+    fn multiple_files_size() {
+        let a = File {
+            parent: None,
+            name: "a".to_string(),
+            size: 1000,
+        };
+        let b = File {
+            parent: None,
+            name: "b".to_string(),
+            size: 754,
+        };
+        let root = Directory::new(None, "root");
+        Directory::add_child_file(root.clone(), a);
+        Directory::add_child_file(root.clone(), b);
+        assert_eq!(1754, Directory::size(&root));
+    }
+
+    #[test]
+    #[traced_test]
+    fn nested_file_fs_size() {
+        let a = File {
+            parent: None,
+            name: "a".to_string(),
+            size: 101,
+        };
+        let root = Directory::new(None, "root");
+        let sub_root = Directory::new(Some(root.clone()), "sub_root");
+        Directory::add_child_file(sub_root.clone(), a);
+        assert_eq!(101, Directory::size(&root));
+        assert_eq!(101, Directory::size(&sub_root));
     }
 }
