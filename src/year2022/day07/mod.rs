@@ -1,15 +1,15 @@
 use {
     std::{
         cell::RefCell,
-        collections::{HashMap, HashSet},
+        collections::HashMap,
         fmt,
-        rc::Rc,
+        rc::{Rc, Weak},
     },
     tracing::{debug, info},
 };
 
 struct Directory {
-    parent: Option<Rc<RefCell<Directory>>>,
+    parent: Option<Weak<RefCell<Directory>>>,
     name: String,
     directory_children: HashMap<String, Rc<RefCell<Directory>>>,
     file_children: HashMap<String, File>,
@@ -19,19 +19,11 @@ impl fmt::Debug for Directory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let parent_name = match self.parent.as_ref() {
             None => "<none>".to_string(),
-            Some(p) => p.as_ref().borrow().name.clone(),
+            Some(p) => p.upgrade().unwrap().as_ref().borrow().name.clone(),
         };
-        let directory_children = self
-            .directory_children
-            .iter()
-            .map(|(name, _)| name.clone())
-            .collect::<HashSet<_>>();
+        let directory_children = self.directory_children.keys().cloned();
 
-        let file_children = self
-            .file_children
-            .iter()
-            .map(|(name, _)| name.clone())
-            .collect::<HashSet<_>>();
+        let file_children = self.file_children.keys().cloned();
         f.debug_struct("Directory")
             .field("parent", &parent_name)
             .field("name", &self.name)
@@ -44,14 +36,15 @@ impl fmt::Debug for Directory {
 impl Directory {
     fn new(parent: Option<Rc<RefCell<Directory>>>, name: &str) -> Rc<RefCell<Directory>> {
         let child = Rc::new(RefCell::new(Directory {
-            parent,
+            parent: parent.map(|d| Rc::downgrade(&d)),
             name: String::from(name),
             directory_children: HashMap::new(),
             file_children: HashMap::new(),
         }));
         if let Some(parent) = &child.as_ref().borrow().parent {
             parent
-                .as_ref()
+                .upgrade()
+                .unwrap()
                 .borrow_mut()
                 .directory_children
                 .insert(child.as_ref().borrow().name.clone(), Rc::clone(&child));
@@ -59,8 +52,20 @@ impl Directory {
         child
     }
 
+    fn abs_path(dir: &Rc<RefCell<Directory>>) -> String {
+        let dir_name = dir.as_ref().borrow().name.clone();
+        match &dir.as_ref().borrow().parent {
+            None => dir_name,
+            Some(parent) => format!(
+                "{}/{}",
+                Directory::abs_path(&parent.upgrade().unwrap()),
+                dir_name
+            ),
+        }
+    }
+
     fn add_child_file(parent: Rc<RefCell<Self>>, mut child: File) {
-        child.parent.replace(Rc::clone(&parent));
+        child.parent.replace(Rc::downgrade(&parent));
         parent
             .as_ref()
             .borrow_mut()
@@ -74,25 +79,24 @@ impl Directory {
             total += f.size;
         }
         for (_, d) in parent.as_ref().borrow().directory_children.iter() {
-            total += Directory::size(&d);
+            total += Directory::size(d);
         }
         total
     }
 
     fn part1_size_tracking(
         parent: &Rc<RefCell<Directory>>,
-        dois: &mut Vec<Rc<RefCell<Directory>>>,
+        dois: &mut HashMap<String, Rc<RefCell<Directory>>>,
     ) -> usize {
         let mut total = 0;
         for (_, f) in parent.as_ref().borrow().file_children.iter() {
             total += f.size;
         }
         for (_, d) in parent.as_ref().borrow().directory_children.iter() {
-            let s = Directory::part1_size_tracking(&d, dois);
-            if s <= 100000 {
-                dois.push(d.clone());
-            }
-            total += s;
+            total += Directory::part1_size_tracking(d, dois);
+        }
+        if total <= 100000 {
+            dois.insert(Directory::abs_path(parent), parent.clone());
         }
         total
     }
@@ -100,7 +104,7 @@ impl Directory {
 
 #[derive(Debug, Clone)]
 struct File {
-    parent: Option<Rc<RefCell<Directory>>>,
+    parent: Option<Weak<RefCell<Directory>>>,
     name: String,
     size: usize,
 }
@@ -113,7 +117,7 @@ pub fn part1(input: String) {
     let file_regex = regex::Regex::new(r"(\d+) (.*)").unwrap();
     let ls_regex = regex::Regex::new(r"\$ ls").unwrap();
 
-    let root_directory = Directory::new(None, "/");
+    let root_directory = Directory::new(None, "");
     let mut current_directory = root_directory.clone();
 
     for line in input.trim().split('\n') {
@@ -132,7 +136,7 @@ pub fn part1(input: String) {
                 .as_ref()
                 .unwrap()
                 .clone();
-            current_directory = next_directory;
+            current_directory = next_directory.upgrade().unwrap();
             continue;
         }
         if let Some(cd_cap) = cd_regex.captures(line) {
@@ -171,24 +175,20 @@ pub fn part1(input: String) {
     debug!("Root directory: {:?}", root_directory.as_ref().borrow());
     debug!("Root directory size: {}", Directory::size(&root_directory));
 
-    let mut dois = Vec::new();
-    if Directory::size(&root_directory) <= 100000 {
-        dois.push(root_directory.clone());
-    }
+    let mut dois = HashMap::new();
     Directory::part1_size_tracking(&root_directory, &mut dois);
 
     //debug!("DOIs: {:?}", dois);
     debug!("DOIs len: {}", dois.len());
-    let mut doi_sizes = dois
+    let doi_sizes = dois
         .iter()
-        .map(|d| format!("{}-{}", d.as_ref().borrow().name, Directory::size(&d)))
+        .map(|(abs_path, d)| format!("{}-{}", abs_path, Directory::size(d)))
         .collect::<Vec<_>>();
-    doi_sizes.sort();
     debug!("DOI sizes: {:?}", doi_sizes);
 
     info!(
         "Part 1 Answer: {}",
-        dois.iter().fold(0, |acc, d| acc + Directory::size(&d))
+        dois.iter().fold(0, |acc, (_, d)| acc + Directory::size(d))
     );
 }
 
@@ -252,7 +252,7 @@ mod tests {
         let root = Directory::new(None, "root");
         Directory::add_child_file(root.clone(), f.clone());
         assert_eq!(1, root.as_ref().borrow().file_children.len());
-        Directory::add_child_file(root.clone(), f.clone());
+        Directory::add_child_file(root.clone(), f);
         assert_eq!(1, root.as_ref().borrow().file_children.len());
 
         debug!("root: {:?}", root.as_ref().borrow());
