@@ -31,6 +31,7 @@ pub fn get_day(year: u32, day: u32) -> (DayFn, DayFn) {
         (2022, 5) => (year2022::day05::part1, year2022::day05::part2),
         (2022, 6) => (year2022::day06::part1, year2022::day06::part2),
         (2022, 7) => (year2022::day07::part1, year2022::day07::part2),
+        (2022, 8) => (year2022::day08::part1, year2022::day08::part2),
         _ => {
             panic!("Unknown day: {}", day);
         }
