@@ -92,7 +92,56 @@ pub fn part1(input: String) {
     );
 }
 
-pub fn part2(_input: String) {}
+fn determine_scenic_score(trees: &[u8]) -> Vec<usize> {
+    let mut scenic_scores = vec![];
+    for (i, treehouse) in trees.iter().enumerate() {
+        let mut left_score: usize = 0;
+        let mut right_score: usize = 0;
+        for tree in trees.iter().take(i).rev() {
+            left_score += 1;
+            if treehouse <= tree {
+                break;
+            }
+        }
+        for tree in trees.iter().skip(i + 1) {
+            right_score += 1;
+            if treehouse <= tree {
+                break;
+            }
+        }
+        scenic_scores.push(left_score * right_score)
+    }
+    scenic_scores
+}
+
+pub fn part2(input: String) {
+    let mut forest = build_forest(input);
+
+    let mut scenic_scores = vec![vec![1usize; forest[0].len()]; forest.len()];
+    for _ in 0..2 {
+        scenic_scores = forest
+            .iter()
+            .enumerate()
+            .fold(scenic_scores, |mut acc, (i, row)| {
+                acc[i]
+                    .iter_mut()
+                    .zip(determine_scenic_score(row).iter())
+                    .for_each(|(a, b)| *a *= b);
+                acc
+            });
+        scenic_scores = transpose(&scenic_scores);
+        forest = transpose(&forest);
+    }
+    tracing::debug!("{scenic_scores:?}");
+    tracing::info!(
+        "Part 2 Answer: {}",
+        scenic_scores
+            .iter()
+            .map(|r| r.iter().max().unwrap())
+            .max()
+            .unwrap()
+    );
+}
 
 #[cfg(test)]
 mod tests {
@@ -117,5 +166,15 @@ mod tests {
             vec![vec![1, 2, 3], vec![4, 5, 6]],
             transpose(&vec![vec![1, 4], vec![2, 5], vec![3, 6]])
         )
+    }
+
+    #[traced_test]
+    #[test_case("".as_bytes(), vec![]; "empty")]
+    #[test_case("0".as_bytes(), vec![0]; "single zero")]
+    #[test_case("9".as_bytes(), vec![0]; "single nonzero")]
+    #[test_case("12".as_bytes(), vec![0, 0]; "edges only")]
+    #[test_case("25512".as_bytes(), vec![0,1,2,1,0]; "nontrivial")]
+    fn single_row_scenic_score(trees: &[u8], expected_scenic_score: Vec<usize>) {
+        assert_eq!(expected_scenic_score, determine_scenic_score(trees));
     }
 }
