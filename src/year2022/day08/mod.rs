@@ -48,13 +48,19 @@ fn transpose<T: Clone>(grid: &Vec<Vec<T>>) -> Vec<Vec<T>> {
     grid_t
 }
 
-pub fn part1(input: String) {
+fn build_forest(input: String) -> Vec<Vec<u8>> {
     let mut forest = vec![];
-    let mut visibility = vec![];
     for line in input.trim().split('\n') {
-        let row = line.as_bytes().to_vec();
-        visibility.push(determine_visibility(&row));
-        forest.push(row);
+        forest.push(line.as_bytes().to_vec());
+    }
+    forest
+}
+
+pub fn part1(input: String) {
+    let forest = build_forest(input);
+    let mut visibility = vec![];
+    for row in &forest {
+        visibility.push(determine_visibility(row));
     }
 
     let forest_t = transpose(&forest);
