@@ -100,6 +100,17 @@ impl Directory {
         }
         total
     }
+
+    fn all_directories_and_sizes(
+        dir: &Rc<RefCell<Directory>>,
+        mut acc: HashMap<String, usize>,
+    ) -> HashMap<String, usize> {
+        acc.insert(Directory::abs_path(dir), Directory::size(dir));
+        for (_, d) in dir.as_ref().borrow().directory_children.iter() {
+            acc = Directory::all_directories_and_sizes(d, acc);
+        }
+        acc
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -109,7 +120,7 @@ struct File {
     size: usize,
 }
 
-pub fn part1(input: String) {
+fn build_fs(input: String) -> Rc<RefCell<Directory>> {
     let cd_root_regex = regex::Regex::new(r"\$ cd /").unwrap();
     let cd_parent_regex = regex::Regex::new(r"\$ cd \.\.").unwrap();
     let cd_regex = regex::Regex::new(r"\$ cd (.*)").unwrap();
@@ -175,6 +186,11 @@ pub fn part1(input: String) {
     debug!("Root directory: {:?}", root_directory.as_ref().borrow());
     debug!("Root directory size: {}", Directory::size(&root_directory));
 
+    root_directory
+}
+
+pub fn part1(input: String) {
+    let root_directory = build_fs(input);
     let mut dois = HashMap::new();
     Directory::part1_size_tracking(&root_directory, &mut dois);
 
@@ -192,7 +208,27 @@ pub fn part1(input: String) {
     );
 }
 
-pub fn part2(_input: String) {}
+pub fn part2(input: String) {
+    let total_disk_space = 70000000;
+    let needed_unused_space = 30000000;
+
+    let root_directory = build_fs(input);
+    let required_to_free =
+        needed_unused_space - (total_disk_space - Directory::size(&root_directory));
+    let all_directories = Directory::all_directories_and_sizes(&root_directory, HashMap::new());
+    debug!("{:?}", all_directories);
+
+    info!(
+        "Part 2 Answer: {}",
+        all_directories
+            .values()
+            .filter(|s| **s >= required_to_free)
+            .map(|s| s - required_to_free)
+            .min()
+            .unwrap()
+            + required_to_free
+    );
+}
 
 #[cfg(test)]
 mod tests {
