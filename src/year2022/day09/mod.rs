@@ -28,7 +28,7 @@ impl Movement {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct Head(i64, i64);
 
 impl From<Head> for (i64, i64) {
@@ -60,7 +60,7 @@ impl Head {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, std::hash::Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, std::hash::Hash, Debug)]
 struct Tail(i64, i64);
 
 impl From<Tail> for (i64, i64) {
@@ -78,7 +78,17 @@ impl Tail {
         if self.is_adjacent(&new) {
             return (self, self);
         }
-        (self, Self(old.0, old.1))
+        if old.0 == new.0 || old.1 == new.1 {
+            return (self, Self(old.0, old.1));
+        }
+        if self.0 == new.0 {
+            return (self, Self(self.0, old.1));
+        }
+        if self.1 == new.1 {
+            return (self, Self(old.0, self.1));
+        }
+        let delta = (new.0 - old.0, new.1 - old.1);
+        (self, Self(self.0 + delta.0, self.1 + delta.1))
     }
 
     fn is_adjacent(&self, other: &(i64, i64)) -> bool {
@@ -89,6 +99,7 @@ impl Tail {
     }
 }
 
+#[derive(Debug, Clone)]
 struct Rope {
     head: Head,
     rest: [Tail; 9],
@@ -110,6 +121,7 @@ impl Rope {
             (old_tail, new_tail) = t.follow((old_tail.into(), new_tail.into()));
             *t = new_tail;
         }
+        tracing::debug!("{self:?}");
         self
     }
 }
@@ -139,6 +151,7 @@ pub fn part2(input: String) {
     tail_positions.insert(rope.rest[8]);
 
     for command in input.trim().split('\n') {
+        tracing::debug!("rope: {:?}", rope);
         let movements = Movement::from_command(command);
         for m in movements {
             rope = rope.r#move(m);
