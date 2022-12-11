@@ -1,43 +1,27 @@
+use std::collections::VecDeque;
+
 #[derive(PartialEq, Eq, Debug)]
-struct Throw(u8);
+struct Throw(usize);
 
 struct Monkey {
-    pub number: u8,
-    pub items: Vec<u8>,
-    pub operation: Box<dyn Fn(u8) -> u8>,
-    pub test: Box<dyn Fn(u8) -> Option<Throw>>,
+    pub number: usize,
+    pub items: VecDeque<usize>,
+    pub operation: Box<dyn Fn(usize) -> usize>,
+    pub test: Box<dyn Fn(usize) -> Option<Throw>>,
+    pub test_divisor: usize,
+    pub inspections: usize,
 }
-
-impl Ord for Monkey {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.number.cmp(&other.number)
-    }
-}
-
-impl PartialOrd for Monkey {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Monkey {
-    fn eq(&self, other: &Self) -> bool {
-        self.number.eq(&other.number)
-    }
-}
-
-impl Eq for Monkey {}
 
 enum OpArg {
     Old,
-    Number(u8),
+    Number(usize),
 }
 
 fn parse_op_arg(op_arg: &str) -> OpArg {
     if op_arg == "old" {
         return OpArg::Old;
     }
-    OpArg::Number(op_arg.parse::<u8>().unwrap())
+    OpArg::Number(op_arg.parse::<usize>().unwrap())
 }
 
 enum Op {
@@ -53,7 +37,7 @@ fn parse_op(op: char) -> Op {
     }
 }
 
-fn parse_operation(operation_s: &str) -> Box<dyn Fn(u8) -> u8> {
+fn parse_operation(operation_s: &str) -> Box<dyn Fn(usize) -> usize> {
     let operation_re = regex::Regex::new(r"new = (old|\d+) (\*|\+) (old|\d+)").unwrap();
 
     let (arg_1, op, arg_2) = {
@@ -83,16 +67,28 @@ fn parse_operation(operation_s: &str) -> Box<dyn Fn(u8) -> u8> {
 
 fn parse_test(
     test_s: &str,
-    true_monkey_number: u8,
-    false_monkey_number: u8,
-) -> Box<dyn Fn(u8) -> Option<Throw>> {
+    true_monkey_number: usize,
+    false_monkey_number: usize,
+) -> (Box<dyn Fn(usize) -> Option<Throw>>, usize) {
     let test_re = regex::Regex::new(r"divisible by (\d+)").unwrap();
-    let divisor = test_re.captures(test_s).unwrap().get(1).unwrap().as_str().parse::<u8>().unwrap();
-    Box::new(move |current| if current % divisor == 0 {
-        Some(Throw(true_monkey_number))
-    } else {
-        Some(Throw(false_monkey_number))
-    })
+    let divisor = test_re
+        .captures(test_s)
+        .unwrap()
+        .get(1)
+        .unwrap()
+        .as_str()
+        .parse::<usize>()
+        .unwrap();
+    (
+        Box::new(move |current| {
+            if current % divisor == 0 {
+                Some(Throw(true_monkey_number))
+            } else {
+                Some(Throw(false_monkey_number))
+            }
+        }),
+        divisor,
+    )
 }
 
 fn parse_monkey(monkey_definition: &str) -> Monkey {
@@ -113,14 +109,14 @@ Monkey (?P<monkey_number>\d+):
         .name("monkey_number")
         .unwrap()
         .as_str()
-        .parse::<u8>()
+        .parse::<usize>()
         .unwrap();
-    let items: Vec<u8> = caps
+    let items: VecDeque<usize> = caps
         .name("items")
         .unwrap()
         .as_str()
         .split(", ")
-        .map(|item| item.parse::<u8>().unwrap())
+        .map(|item| item.parse::<usize>().unwrap())
         .collect();
     let operation_s = caps.name("operation").unwrap().as_str();
     let test_s = caps.name("test").unwrap().as_str();
@@ -128,34 +124,93 @@ Monkey (?P<monkey_number>\d+):
         .name("true_monkey_number")
         .unwrap()
         .as_str()
-        .parse::<u8>()
+        .parse::<usize>()
         .unwrap();
     let false_monkey_number = caps
         .name("false_monkey_number")
         .unwrap()
         .as_str()
-        .parse::<u8>()
+        .parse::<usize>()
         .unwrap();
 
     let operation = parse_operation(operation_s);
-    let test = parse_test(test_s, true_monkey_number, false_monkey_number);
+    let (test, test_divisor) = parse_test(test_s, true_monkey_number, false_monkey_number);
 
     Monkey {
         number,
         items,
         operation,
         test,
+        test_divisor,
+        inspections: 0,
     }
 }
 
 pub fn part1(input: String) {
-    let monkeys = input.split("\n\n").map(parse_monkey);
-    for m in monkeys {
-        tracing::debug!("Monkey {}: {:?}", m.number, m.items);
+    let mut monkeys: Vec<Monkey> = input.split("\n\n").map(parse_monkey).collect();
+    monkeys.sort_by(|a, b| a.number.cmp(&b.number));
+    for round in 1..=20 {
+        for i in 0..monkeys.len() {
+            let items: Vec<usize> = monkeys[i].items.drain(..).collect();
+            for item in items {
+                let item = (monkeys[i].operation)(item) / 3;
+                monkeys[i].inspections += 1;
+                match (monkeys[i].test)(item) {
+                    None => unreachable!(),
+                    Some(Throw(monkey_number)) => monkeys[monkey_number].items.push_back(item),
+                }
+            }
+        }
+        tracing::debug!("After Round {}", round);
+        for m in &monkeys {
+            tracing::debug!("  Monkey {}: {:?}", m.number, m.items);
+        }
     }
+
+    monkeys.sort_by(|a, b| a.inspections.cmp(&b.inspections));
+    tracing::info!(
+        "Part 1 Answer: {}",
+        monkeys
+            .iter()
+            .rev()
+            .take(2)
+            .fold(1, |acc, m| acc * m.inspections)
+    );
 }
 
-pub fn part2(_input: String) {}
+pub fn part2(input: String) {
+    let mut monkeys: Vec<Monkey> = input.split("\n\n").map(parse_monkey).collect();
+    monkeys.sort_by(|a, b| a.number.cmp(&b.number));
+
+    let worry_divider = monkeys.iter().fold(1, |acc, m| m.test_divisor * acc);
+    for round in 1..=10000 {
+        for i in 0..monkeys.len() {
+            let items: Vec<usize> = monkeys[i].items.drain(..).collect();
+            for item in items {
+                let item = (monkeys[i].operation)(item) % worry_divider;
+                monkeys[i].inspections += 1;
+                match (monkeys[i].test)(item) {
+                    None => unreachable!(),
+                    Some(Throw(monkey_number)) => monkeys[monkey_number].items.push_back(item),
+                }
+            }
+        }
+        tracing::debug!("After Round {}", round);
+        for m in &monkeys {
+            tracing::debug!("  Monkey {}: {:?}", m.number, m.items);
+        }
+    }
+
+    monkeys.sort_by(|a, b| a.inspections.cmp(&b.inspections));
+    tracing::info!(
+        "Part 2 Answer: {}",
+        monkeys
+            .iter()
+            .rev()
+            .take(2)
+            .fold(1, |acc, m| acc * m.inspections)
+    );
+}
 
 #[cfg(test)]
 mod tests {
@@ -187,6 +242,6 @@ Monkey 1:
     #[test_case("new = old + 12"; "old plus twelve")]
     #[test_case("new = 8 + old"; "eight plus old")]
     fn parse_operation_example(operation_s: &str) {
-        parse_operation(operation_s);
+        let _ = parse_operation(operation_s);
     }
 }
