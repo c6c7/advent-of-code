@@ -18,9 +18,9 @@ fn elf_assignments(input: String) -> Vec<(HashSet<usize>, HashSet<usize>)> {
     pairs
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let mut ans = 0;
-    for assignments in elf_assignments(input) {
+    for assignments in elf_assignments(input.to_string()) {
         if assignments.0.is_superset(&assignments.1) || assignments.0.is_subset(&assignments.1) {
             tracing::debug!("total overlap: {assignments:?}");
             ans += 1;
@@ -28,9 +28,9 @@ pub fn part1(input: String) {
     }
     tracing::info!("Part 1 Answer: {ans}");
 }
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let mut ans = 0;
-    for assignments in elf_assignments(input) {
+    for assignments in elf_assignments(input.to_string()) {
         if !assignments
             .0
             .intersection(&assignments.1)

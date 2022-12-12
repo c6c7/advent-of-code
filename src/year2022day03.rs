@@ -33,7 +33,7 @@ fn find_duplicate(rucksack: &str) -> char {
     unreachable!()
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let rucksack_list = input.trim().split('\n');
     let mut sum: usize = 0;
     for rucksack in rucksack_list {
@@ -47,7 +47,7 @@ pub fn part1(input: String) {
     info!("Part 1 Answer: {}", sum);
 }
 
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let rucksack_list = input.trim().split('\n');
     let mut sum = 0;
     for group in rucksack_list.array_chunks::<3>() {

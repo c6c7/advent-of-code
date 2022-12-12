@@ -20,7 +20,7 @@ impl CpuState {
     }
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let cpu_state = input
         .trim()
         .split('\n')
@@ -55,4 +55,4 @@ pub fn part1(input: String) {
     tracing::info!("Part 1 Answer: {}", cpu_state.accumulated_signal_strength);
 }
 
-pub fn part2(_input: String) {}
+pub fn part2(_input: &str) {}

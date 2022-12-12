@@ -126,7 +126,7 @@ impl Rope {
     }
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let mut tail_positions = std::collections::HashSet::new();
     let mut head = Head::new();
     let mut tail = Tail::new();
@@ -145,7 +145,7 @@ pub fn part1(input: String) {
     tracing::info!("Part 1 Answer: {}", tail_positions.len());
 }
 
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let mut rope = Rope::new();
     let mut tail_positions = std::collections::HashSet::new();
     tail_positions.insert(rope.rest[8]);

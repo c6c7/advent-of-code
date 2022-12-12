@@ -49,14 +49,14 @@ fn build_elf_heap(input: String) -> BinaryHeap<Elf> {
     elves
 }
 
-pub fn part1(input: String) {
-    let elves = build_elf_heap(input);
+pub fn part1(input: &str) {
+    let elves = build_elf_heap(input.to_string());
     println!("Number of elves: {}", elves.len());
     println!("Part 1: {:?}", elves.peek());
 }
 
-pub fn part2(input: String) {
-    let mut elves = build_elf_heap(input);
+pub fn part2(input: &str) {
+    let mut elves = build_elf_heap(input.to_string());
     let mut top3_total = 0;
     for _ in 0..3 {
         top3_total += elves.pop().unwrap().total;

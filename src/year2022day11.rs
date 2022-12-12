@@ -146,7 +146,7 @@ Monkey (?P<monkey_number>\d+):
     }
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let mut monkeys: Vec<Monkey> = input.split("\n\n").map(parse_monkey).collect();
     monkeys.sort_by(|a, b| a.number.cmp(&b.number));
     for round in 1..=20 {
@@ -178,7 +178,7 @@ pub fn part1(input: String) {
     );
 }
 
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let mut monkeys: Vec<Monkey> = input.split("\n\n").map(parse_monkey).collect();
     monkeys.sort_by(|a, b| a.number.cmp(&b.number));
 

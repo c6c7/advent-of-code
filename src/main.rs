@@ -1,38 +1,14 @@
 use {
-    advent_of_code::get_day,
-    std::{
-        env, fs, io,
-        time::{Duration, Instant},
-    },
-    tracing::{debug, info},
+    std::{env, fs, io},
+    tracing::info,
 };
 
-fn fmt_time(ms: f64) -> String {
-    if ms <= 1.0 {
-        let micro_sec = ms * 1000.0;
-        return format!("{}µs", micro_sec.round());
-    }
-    if ms < 1000.0 {
-        let whole_ms = ms.floor();
-        let rem_ms = ms - whole_ms;
-        return format!("{whole_ms}ms ") + &fmt_time(rem_ms);
-    }
-    let sec: f64 = ms / 1000.0;
-    if sec < 60.0 {
-        let whole_sec = sec.floor();
-        let rem_ms = ms - whole_sec * 1000.0;
-        return format!("{whole_sec}s ") + &fmt_time(rem_ms);
-    }
-    let min: f64 = sec / 60.0;
-    format!("{}m ", min.floor()) + &fmt_time((sec % 60.0) * 1000.0)
-}
-
-fn fmt_dur(dur: Duration) -> String {
-    fmt_time(dur.as_secs_f64() * 1000.0)
-}
-
 fn main() {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_env_filter("info,[main]=debug")
+        .init();
+
+    advent_of_code::init_parts();
 
     // Get day string
     let args: Vec<String> = env::args().collect();
@@ -54,7 +30,7 @@ fn main() {
     }
     // Parse year as number
     year = year.trim().to_string();
-    let year_num: u32 = match year.parse() {
+    let year_num: usize = match year.parse() {
         Ok(num) => num,
         Err(_) => {
             info!("Invalid year number: {}", year);
@@ -63,7 +39,7 @@ fn main() {
     };
     // Parse day as number
     day = day.trim().to_string();
-    let day_num: u32 = match day.parse() {
+    let day_num: u8 = match day.parse() {
         Ok(num) => num,
         Err(_) => {
             info!("Invalid day number: {}", day);
@@ -80,17 +56,10 @@ fn main() {
 
     // Get corresponding function
 
-    let (part1, part2) = get_day(year_num, day_num);
-    // Time it
-    info!("Running Part 1");
-    let part1_start = Instant::now();
-    part1(input.clone());
-    let part1_dur = part1_start.elapsed();
-    debug!("Took {}", fmt_dur(part1_dur));
-
-    info!("Running Part 2");
-    let part2_start = Instant::now();
-    part2(input);
-    let part2_dur = part2_start.elapsed();
-    debug!("Took {}", fmt_dur(part2_dur));
+    let parts = advent_of_code::PARTS.get(&(year_num, day_num));
+    for (i, part) in parts.iter().enumerate().map(|(i, part)| (i + 1, part)) {
+        info!("Running Part {}", i);
+        part(&input);
+        info!("Part {} complete.", i);
+    }
 }

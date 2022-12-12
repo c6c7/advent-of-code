@@ -74,7 +74,7 @@ fn move_crates_9001(stacks: &mut [Vec<char>; NUM_STACKS], moves: Vec<CrateMove>)
     }
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let mut input = input.split("\n\n");
     let initial_stack_state = input.next().unwrap();
     let mut stacks = read_stacks(initial_stack_state);
@@ -90,7 +90,7 @@ pub fn part1(input: String) {
     info!("Part 1 Answer: {ans}");
 }
 
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let mut input = input.split("\n\n");
     let initial_stack_state = input.next().unwrap();
     let mut stacks = read_stacks(initial_stack_state);

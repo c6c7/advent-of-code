@@ -189,8 +189,8 @@ fn build_fs(input: String) -> Rc<RefCell<Directory>> {
     root_directory
 }
 
-pub fn part1(input: String) {
-    let root_directory = build_fs(input);
+pub fn part1(input: &str) {
+    let root_directory = build_fs(input.to_string());
     let mut dois = HashMap::new();
     Directory::part1_size_tracking(&root_directory, &mut dois);
 
@@ -208,11 +208,11 @@ pub fn part1(input: String) {
     );
 }
 
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let total_disk_space = 70000000;
     let needed_unused_space = 30000000;
 
-    let root_directory = build_fs(input);
+    let root_directory = build_fs(input.to_string());
     let required_to_free =
         needed_unused_space - (total_disk_space - Directory::size(&root_directory));
     let all_directories = Directory::all_directories_and_sizes(&root_directory, HashMap::new());

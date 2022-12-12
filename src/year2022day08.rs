@@ -48,7 +48,7 @@ fn transpose<T: Clone>(grid: &Vec<Vec<T>>) -> Vec<Vec<T>> {
     grid_t
 }
 
-fn build_forest(input: String) -> Vec<Vec<u8>> {
+fn build_forest(input: &str) -> Vec<Vec<u8>> {
     let mut forest = vec![];
     for line in input.trim().split('\n') {
         forest.push(line.as_bytes().to_vec());
@@ -56,7 +56,7 @@ fn build_forest(input: String) -> Vec<Vec<u8>> {
     forest
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let forest = build_forest(input);
     let mut visibility = vec![];
     for row in &forest {
@@ -114,7 +114,7 @@ fn determine_scenic_score(trees: &[u8]) -> Vec<usize> {
     scenic_scores
 }
 
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let mut forest = build_forest(input);
 
     let mut scenic_scores = vec![vec![1usize; forest[0].len()]; forest.len()];

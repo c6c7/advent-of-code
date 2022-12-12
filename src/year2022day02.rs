@@ -28,7 +28,7 @@ fn match_score(opponent: u8, me: u8) -> u64 {
     (choice_score + outcome_score).into()
 }
 
-pub fn part1(input: String) {
+pub fn part1(input: &str) {
     let mut input_by_newline = input.trim().split('\n');
     let mut total_score = 0;
     while let Some((opponent, me)) = read_match(&mut input_by_newline) {
@@ -69,7 +69,7 @@ fn shape_for_outcome(opponent: u8, outcome: Outcome) -> u8 {
     }
 }
 
-pub fn part2(input: String) {
+pub fn part2(input: &str) {
     let mut input_by_newline = input.trim().split('\n');
     let mut total_score = 0;
     while let Some((opponent, outcome)) = read_message(&mut input_by_newline) {

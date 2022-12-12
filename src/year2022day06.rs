@@ -67,12 +67,12 @@ fn start_marker(input: &str, distinct_count: usize) -> FirstMarker {
     unreachable!();
 }
 
-pub fn part1(input: String) {
-    tracing::info!("Part 1 Answer: {:?}", start_of_packet_marker(&input));
+pub fn part1(input: &str) {
+    tracing::info!("Part 1 Answer: {:?}", start_of_packet_marker(input));
 }
 
-pub fn part2(input: String) {
-    tracing::info!("Part 2 Answer: {:?}", start_of_message_marker(&input));
+pub fn part2(input: &str) {
+    tracing::info!("Part 2 Answer: {:?}", start_of_message_marker(input));
 }
 
 #[cfg(test)]
