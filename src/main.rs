@@ -4,9 +4,7 @@ use {
 };
 
 fn main() {
-    tracing_subscriber::fmt()
-        .with_env_filter("info,[main]=debug")
-        .init();
+    tracing_subscriber::fmt().with_env_filter("info").init();
 
     advent_of_code::init_parts();
 
