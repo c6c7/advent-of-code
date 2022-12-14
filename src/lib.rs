@@ -8,7 +8,7 @@ use {
 
 pub static PARTS: Lazy<Parts> = Lazy::new(Parts::new);
 
-make_init_parts!((2022, 1..=12));
+make_init_parts!((2022, 1..=13));
 
 type PartFn = fn(&str);
 type Year = usize;
