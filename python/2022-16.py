@@ -56,26 +56,24 @@ print("After simplification")
 print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
 
 def max_possible_remaining(G, release_rate, steps_left):
-	if steps_left == 0:
-		return 0
-	if steps_left == 1:
-		return release_rate
-
 	max_remaining = release_rate * steps_left
+	if steps_left <= 1:
+		return max_remaining
+
 	nodes_by_flow_rate = list(G.nodes(data='flow_rate'))
 	nodes_by_flow_rate.sort(key = lambda n: -n[1])
 	for (_, flow_rate) in nodes_by_flow_rate:
 		max_remaining += flow_rate * (steps_left - 1)
 		steps_left -= 2
-		if steps_left <= 0:
+		if steps_left <= 1:
 			break
 	return max_remaining
 
 global_max = 0
 def max_pressure_released(G, path, location, pressure_released, release_rate, steps_left):
-	print(f" --------- ")
-	print(f"  path: {path}\n  location: {location}\n  release_rate: {release_rate}\n  pressure_released: {pressure_released}\n  steps_left: {steps_left}")
-	print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
+	# print(f" --------- ")
+	# print(f"  path: {path}\n  location: {location}\n  release_rate: {release_rate}\n  pressure_released: {pressure_released}\n  steps_left: {steps_left}")
+	# print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
 	global global_max
 
 	if steps_left <= 1:
@@ -94,25 +92,27 @@ def max_pressure_released(G, path, location, pressure_released, release_rate, st
 
 	for neighbor in G.neighbors(location):
 		steps_to_next = G[location][neighbor]['weight']
-		if steps_to_next <= steps_left:
+		if steps_to_next + 1 > steps_left:
 			(new_max, best_path) = (pressure_released + release_rate * steps_left, path)
-		global_max = max(global_max, new_max)
+			global_max = max(global_max, new_max)
 
-		if new_max > local_max:
-			local_best_path = best_path
-			local_max = new_max
+			if new_max > local_max:
+				local_best_path = best_path
+				local_max = new_max
+			continue
 
 		# Open the valve
 		H = G.copy()
 		replace_node(H, location)
 		assert not H.has_node(location)
+		aa_bias = 1 if location == 'AA' else 0
 		(new_max, best_path) = max_pressure_released(
 				H,
 				path + [neighbor],
 				neighbor,
 				pressure_released + release_rate + (release_rate + new_flow_rate) * steps_to_next,
 				release_rate + new_flow_rate,
-				steps_left - steps_to_next - 1)
+				steps_left - steps_to_next - 1 + aa_bias)
 		global_max = max(global_max, new_max)
 
 		if new_max > local_max:
@@ -120,18 +120,19 @@ def max_pressure_released(G, path, location, pressure_released, release_rate, st
 			local_max = new_max
 
 		# Skip the valve
-		(new_max, best_path) = max_pressure_released(
-				G,
-				path + [neighbor],
-				neighbor,
-				pressure_released + release_rate * steps_to_next,
-				release_rate,
-				steps_left - steps_to_next)
-		global_max = max(global_max, new_max)
-
-		if new_max > local_max:
-			local_best_path = best_path
-			local_max = new_max
+		if location != 'AA':
+			(new_max, best_path) = max_pressure_released(
+					G,
+					path + [neighbor],
+					neighbor,
+					pressure_released + release_rate * steps_to_next,
+					release_rate,
+					steps_left - steps_to_next)
+			global_max = max(global_max, new_max)
+	
+			if new_max > local_max:
+				local_best_path = best_path
+				local_max = new_max
 
 	return (local_max, local_best_path)
 
