@@ -82,7 +82,9 @@ def max_pressure_released(G, path, location, total_pressure_released, steps_left
 	# print(f"  path: {path}\n  location: {location}\n  total_pressure_released: {total_pressure_released}\n  steps_left: {steps_left}")N
 	# print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
 
-	assert steps_left > 1
+	assert steps_left >= 0
+	if steps_left <= 1:
+		return
 
 	new_flow_rate = G.nodes[location]['flow_rate']
 	assert new_flow_rate > 0 or location == 'AA'
