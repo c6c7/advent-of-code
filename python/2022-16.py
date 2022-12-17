@@ -45,13 +45,11 @@ def replace_node(G, node):
 def no_flow_rate_nodes(G):
 	return list(map(lambda n: n[0], filter(lambda n: n[1] == 0, G.nodes(data='flow_rate'))))
 
-def simplify(G, omit=None):
-	for node in no_flow_rate_nodes(G):
-		if node == omit:
-			continue
-		replace_node(G, node)
+for node in no_flow_rate_nodes(G):
+	if node == 'AA':
+		continue
+	replace_node(G, node)
 
-simplify(G, omit='AA')
 print("After simplification")
 print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
 
