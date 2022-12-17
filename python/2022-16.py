@@ -55,8 +55,8 @@ simplify(G, omit='AA')
 print("After simplification")
 print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
 
-def max_possible_remaining(G, release_rate, steps_left):
-	max_remaining = release_rate * steps_left
+def max_possible_remaining(G, steps_left):
+	max_remaining = 0
 	if steps_left <= 1:
 		return max_remaining
 
@@ -77,41 +77,43 @@ def update_best(local_max, local_best_path):
 		global_max = local_max
 		global_best_path = local_best_path
 
-def max_pressure_released(G, path, location, pressure_released, release_rate, steps_left):
+def max_pressure_released(G, path, location, total_pressure_released, steps_left):
 	# print(f" --------- ")
-	# print(f"  path: {path}\n  location: {location}\n  release_rate: {release_rate}\n  pressure_released: {pressure_released}\n  steps_left: {steps_left}")
+	# print(f"  path: {path}\n  location: {location}\n  total_pressure_released: {total_pressure_released}\n  steps_left: {steps_left}")N
 	# print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
 
-	if steps_left <= 1:
-		update_best(pressure_released + steps_left * release_rate, path.pop(-1))
-		return
+	assert steps_left > 1
 
 	new_flow_rate = G.nodes[location]['flow_rate']
 	assert new_flow_rate > 0 or location == 'AA'
-	if len(G) == 1:
-		update_best(pressure_released + release_rate + (release_rate + new_flow_rate) * (steps_left - 1), path)
+	if total_pressure_released + max_possible_remaining(G, steps_left) < global_max:
 		return
 
-	if pressure_released + max_possible_remaining(G, release_rate, steps_left) < global_max:
+	# Stay put
+	update_best(total_pressure_released + new_flow_rate * (steps_left - 1), path)
+
+	# Nowhere left to go open
+	if len(G) == 1:
 		return
 
 	for neighbor in G.neighbors(location):
 		steps_to_next = G[location][neighbor]['weight']
+
+		# Opening and moving is no better than opening and staying put
 		if steps_to_next + 1 > steps_left:
-			update_best(pressure_released + release_rate * steps_left, path)
 			continue
 
 		# Open the valve
 		H = G.copy()
 		replace_node(H, location)
 		assert not H.has_node(location)
+		# Always "open" valve AA, but it doesn't cost a step
 		aa_bias = 1 if location == 'AA' else 0
 		max_pressure_released(
 				H,
 				path + [neighbor],
 				neighbor,
-				pressure_released + release_rate + (release_rate + new_flow_rate) * steps_to_next,
-				release_rate + new_flow_rate,
+				total_pressure_released + new_flow_rate * (steps_left - 1),
 				steps_left - steps_to_next - 1 + aa_bias)
 
 		# Skip the valve
@@ -120,11 +122,10 @@ def max_pressure_released(G, path, location, pressure_released, release_rate, st
 					G,
 					path + [neighbor],
 					neighbor,
-					pressure_released + release_rate * steps_to_next,
-					release_rate,
+					total_pressure_released,
 					steps_left - steps_to_next)
 
-max_pressure_released(G, ['AA'], 'AA', 0, 0, 30)
+max_pressure_released(G, ['AA'], 'AA', 0, 30)
 
 print(f"Part 1 Answer: {global_max}, {global_best_path}")
 
