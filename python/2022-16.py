@@ -115,6 +115,7 @@ def F(G, me, me_steps_left, el, el_steps_left, total_pressure_released):
 
 		if next_position == actor:
 			actor_steps_left = 0
+			next_position = 'ZZZ'
 		elif H[actor][next_position]['weight'] + 1 < actor_steps_left:
 			actor_steps_left -= H[actor][next_position]['weight']
 		else:
@@ -139,9 +140,11 @@ best_me_path = None
 best_el_path = None
 number_of_actors = 1
 
-F(G.copy(), ['AA'], 30, ['ZZZ'], 0, 0)
-print(f"Part 1 Answer: {global_max} {best_me_path}")
+#F(G.copy(), ['AA'], 30, ['ZZZ'], 0, 0)
+#print(f"Part 1 Answer: {global_max} {best_me_path}")
 
+#global_max = 2138
+global_max = int(sys.argv[1])
 number_of_actors = 2
 F(G.copy(), ['AA'], 26, ['AA'], 26, 0)
 print(f"Part 2 Answer: {global_max}\n{best_me_path}\n{best_el_path}")
