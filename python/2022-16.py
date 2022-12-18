@@ -67,65 +67,41 @@ def max_possible_remaining(G, steps_left):
 			break
 	return max_remaining
 
-global_max = 0
+global_max = 1767
 global_best_path = None
-def update_best(local_max, local_best_path):
-	global global_max, global_best_path
-	if local_max > global_max:
-		global_max = local_max
-		global_best_path = local_best_path
-
-def max_pressure_released(G, path, location, total_pressure_released, steps_left):
+def F(G, me, el, total_pressure_released, steps_left):
+	global global_max
 	# print(f" --------- ")
 	# print(f"  path: {path}\n  location: {location}\n  total_pressure_released: {total_pressure_released}\n  steps_left: {steps_left}")N
 	# print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
 
-	assert steps_left >= 0
-	if steps_left <= 1:
+	if steps_left == 0:
 		return
-
-	new_flow_rate = G.nodes[location]['flow_rate']
-	assert new_flow_rate > 0 or location == 'AA'
 	if total_pressure_released + max_possible_remaining(G, steps_left) < global_max:
 		return
 
-	# Stay put
-	update_best(total_pressure_released + new_flow_rate * (steps_left - 1), path)
+	for me_action in [('open', None)] + [('move', n) for n in G.neighbors(me)]:
+		for el_action in [('open', None)] + [('move', n) for n in G.neighbors(el)]:
+			H = G.copy()
+			additional_flow_rate = 0
+			next_positions = []	
+			for (actor, (action, neighbor)) in [(me, me_action), (el, el_action)]:
+				if action == 'open' and H.nodes[actor]['flow_rate'] != 0:
+					next_positions.append(actor)
+					additional_flow_rate += H.nodes[actor]['flow_rate']
+					nx.set_node_attributes(H, {actor: 0}, name='flow_rate')
+				elif action == 'move':
+					next_positions.append(neighbor)
+				else:
+					continue
+			if len(next_positions) < 2:
+				continue
 
-	# Nowhere left to go open
-	if len(G) == 1:
-		return
+			total_pressure_released += additional_flow_rate * (steps_left - 1)
+			global_max = max(global_max, total_pressure_released) 
+			F(H, next_positions[0], next_positions[1], total_pressure_released, steps_left - 1)
 
-	for neighbor in G.neighbors(location):
-		steps_to_next = G[location][neighbor]['weight']
+F(G, 'AA', 'AA', 0, 30)
 
-		# Opening and moving is no better than opening and staying put
-		if steps_to_next + 1 > steps_left:
-			continue
-
-		# Open the valve
-		H = G.copy()
-		replace_node(H, location)
-		assert not H.has_node(location)
-		# Always "open" valve AA, but it doesn't cost a step
-		aa_bias = 1 if location == 'AA' else 0
-		max_pressure_released(
-				H,
-				path + [neighbor],
-				neighbor,
-				total_pressure_released + new_flow_rate * (steps_left - 1),
-				steps_left - steps_to_next - 1 + aa_bias)
-
-		# Skip the valve
-		if location != 'AA':
-			max_pressure_released(
-					G,
-					path + [neighbor],
-					neighbor,
-					total_pressure_released,
-					steps_left - steps_to_next)
-
-max_pressure_released(G, ['AA'], 'AA', 0, 30)
-
-print(f"Part 1 Answer: {global_max}, {global_best_path}")
+print(f"Part 2 Answer: {global_max}")
 
