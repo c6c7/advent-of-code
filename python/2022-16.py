@@ -23,11 +23,6 @@ for (valve_name, _, neighbor_list) in input:
 	for neighbor in neighbor_list:
 		G.add_edge(valve_name, neighbor, weight=1)
 
-print("Before simplification")
-print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
-
-graph_simplified = False
-
 def replace_node(G, node):
 	neighbors = list(G.neighbors(node))
 	for i in range(len(neighbors)):
@@ -45,13 +40,11 @@ def replace_node(G, node):
 def no_flow_rate_nodes(G):
 	return list(map(lambda n: n[0], filter(lambda n: n[1] == 0, G.nodes(data='flow_rate'))))
 
-for node in no_flow_rate_nodes(G):
-	if node == 'AA':
-		continue
-	replace_node(G, node)
-
-print("After simplification")
-print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
+def simplify(G, me, el):
+	for node in no_flow_rate_nodes(G):
+		if node in [me, el]:
+			continue
+		replace_node(G, node)
 
 def max_possible_remaining(G, steps_left):
 	max_remaining = 0
@@ -60,48 +53,91 @@ def max_possible_remaining(G, steps_left):
 
 	nodes_by_flow_rate = list(G.nodes(data='flow_rate'))
 	nodes_by_flow_rate.sort(key = lambda n: -n[1])
-	for (_, flow_rate) in nodes_by_flow_rate:
-		max_remaining += flow_rate * (steps_left - 1)
+	nodes_by_flow_rate += [(None, 0) for _ in range(number_of_actors - (len(nodes_by_flow_rate) % number_of_actors))]
+	while len(nodes_by_flow_rate) > 0:
+		for (_, flow_rate) in nodes_by_flow_rate[:number_of_actors]:
+			max_remaining += flow_rate * (steps_left - 1)
 		steps_left -= 2
 		if steps_left <= 1:
 			break
+		nodes_by_flow_rate = nodes_by_flow_rate[number_of_actors:]
 	return max_remaining
 
-global_max = 1767
-global_best_path = None
-def F(G, me, el, total_pressure_released, steps_left):
-	global global_max
-	# print(f" --------- ")
-	# print(f"  path: {path}\n  location: {location}\n  total_pressure_released: {total_pressure_released}\n  steps_left: {steps_left}")N
-	# print(f"{[(node, nodedata) for (node, nodedata) in G.nodes.items()]}")
+def F(G, me, me_steps_left, el, el_steps_left, total_pressure_released):
+	global global_max, best_me_path, best_el_path, number_of_actors
+	simplify(G, me[-1], el[-1])
 
-	if steps_left == 0:
-		return
-	if total_pressure_released + max_possible_remaining(G, steps_left) < global_max:
+	assert me_steps_left >= 0 and el_steps_left >= 0
+	if me_steps_left == 0 and el_steps_left == 0:
 		return
 
-	for me_action in [('open', None)] + [('move', n) for n in G.neighbors(me)]:
-		for el_action in [('open', None)] + [('move', n) for n in G.neighbors(el)]:
-			H = G.copy()
-			additional_flow_rate = 0
-			next_positions = []	
-			for (actor, (action, neighbor)) in [(me, me_action), (el, el_action)]:
-				if action == 'open' and H.nodes[actor]['flow_rate'] != 0:
-					next_positions.append(actor)
-					additional_flow_rate += H.nodes[actor]['flow_rate']
-					nx.set_node_attributes(H, {actor: 0}, name='flow_rate')
-				elif action == 'move':
-					next_positions.append(neighbor)
-				else:
-					continue
-			if len(next_positions) < 2:
-				continue
+	mpr = max_possible_remaining(G, max(me_steps_left, el_steps_left))
+	if total_pressure_released + mpr < global_max:
+		return
 
-			total_pressure_released += additional_flow_rate * (steps_left - 1)
-			global_max = max(global_max, total_pressure_released) 
-			F(H, next_positions[0], next_positions[1], total_pressure_released, steps_left - 1)
+	turn = None
+	if me_steps_left >= el_steps_left:
+		turn = 'me'
+	else:
+		turn = 'el'
 
-F(G, 'AA', 'AA', 0, 30)
+	if turn == 'me':
+		actor = me[-1]
+		other_actor = el[-1]
+	elif turn == 'el':
+		actor = el[-1]
+		other_actor = me[-1]
+	else:
+		assert False
+	
+	for (action, next_position) in [('open', actor), ('move', actor)] + [('open', n) for n in G.neighbors(actor)] + [('move', n) for n in G.neighbors(actor)]:
+		if turn == 'me':
+			actor_steps_left = me_steps_left
+		elif turn == 'el':
+			actor_steps_left = el_steps_left
+		else:
+			assert False
+	
+		H = G.copy()
+		pressure_added = 0
+		if action == 'open' and H.nodes[actor]['flow_rate'] > 0:
+			pressure_added += H.nodes[actor]['flow_rate'] * (actor_steps_left - 1)
+			nx.set_node_attributes(H, {actor: 0}, name='flow_rate')
+			actor_steps_left -= 1
+		elif action == 'move':
+			pass
+		else:
+			continue
 
-print(f"Part 2 Answer: {global_max}")
+		if next_position == actor:
+			actor_steps_left = 0
+		elif H[actor][next_position]['weight'] + 1 < actor_steps_left:
+			actor_steps_left -= H[actor][next_position]['weight']
+		else:
+			continue
+		
+		next_total_pressure_released = total_pressure_released + pressure_added
+		if next_total_pressure_released > global_max:
+			global_max = next_total_pressure_released
+			best_me_path = me[:]
+			best_el_path = el[:]
+
+		if turn == 'me':
+			F(H, me + [next_position], actor_steps_left, el, el_steps_left, next_total_pressure_released)
+		elif turn == 'el':
+			F(H, me, me_steps_left, el + [next_position], actor_steps_left, next_total_pressure_released)
+		else:
+			assert False
+
+global_max = 0
+best_me_path = None
+best_el_path = None
+number_of_actors = 1
+
+F(G.copy(), ['AA'], 30, ['ZZZ'], 0, 0)
+print(f"Part 1 Answer: {global_max} {best_me_path}")
+
+number_of_actors = 2
+F(G.copy(), ['AA'], 26, ['AA'], 26, 0)
+print(f"Part 2 Answer: {global_max}\n{best_me_path}\n{best_el_path}")
 
