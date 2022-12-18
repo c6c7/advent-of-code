@@ -48,19 +48,18 @@ def simplify(G, me, el):
 
 def max_possible_remaining(G, steps_left):
 	max_remaining = 0
-	if steps_left <= 1:
-		return max_remaining
+	nodes_by_flow_rate = list(map(lambda nv: nv[1], G.nodes(data='flow_rate')))
+	nodes_by_flow_rate.sort()
+	steps_left.sort(reverse=True)
+	while len(nodes_by_flow_rate) > 0 and len(list(filter(lambda sl: sl >= 2, steps_left))) > 0:
+		for i in range(len(steps_left)):
+			if steps_left[i] < 2:
+				continue
+			if len(nodes_by_flow_rate) == 0:
+				break
 
-	nodes_by_flow_rate = list(G.nodes(data='flow_rate'))
-	nodes_by_flow_rate.sort(key = lambda n: -n[1])
-	nodes_by_flow_rate += [(None, 0) for _ in range(number_of_actors - (len(nodes_by_flow_rate) % number_of_actors))]
-	while len(nodes_by_flow_rate) > 0:
-		for (_, flow_rate) in nodes_by_flow_rate[:number_of_actors]:
-			max_remaining += flow_rate * (steps_left - 1)
-		steps_left -= 2
-		if steps_left <= 1:
-			break
-		nodes_by_flow_rate = nodes_by_flow_rate[number_of_actors:]
+			max_remaining += nodes_by_flow_rate.pop() * (steps_left[i] - 1)
+			steps_left[i] -= 2
 	return max_remaining
 
 def F(G, me, me_steps_left, el, el_steps_left, total_pressure_released):
@@ -71,7 +70,7 @@ def F(G, me, me_steps_left, el, el_steps_left, total_pressure_released):
 	if me_steps_left == 0 and el_steps_left == 0:
 		return
 
-	mpr = max_possible_remaining(G, max(me_steps_left, el_steps_left))
+	mpr = max_possible_remaining(G, [me_steps_left] if number_of_actors == 1 else [me_steps_left, el_steps_left])
 	if total_pressure_released + mpr < global_max:
 		return
 
