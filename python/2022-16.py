@@ -62,6 +62,11 @@ def max_possible_remaining(G, steps_left):
 			steps_left[i] -= 2
 	return max_remaining
 
+def neighbors_by_flow_rate(G, node):
+	neighbors = list(filter(lambda nv: nv[0] in G.neighbors(node), G.nodes.data('flow_rate')))
+	neighbors.sort(key = lambda nv: nv[1], reverse = True)
+	return list(map(lambda nv: nv[0], neighbors))
+
 def F(G, me, me_steps_left, el, el_steps_left, total_pressure_released):
 	global global_max, best_me_path, best_el_path, number_of_actors
 	simplify(G, me[-1], el[-1])
@@ -89,7 +94,7 @@ def F(G, me, me_steps_left, el, el_steps_left, total_pressure_released):
 	else:
 		assert False
 	
-	for (action, next_position) in [('open', actor), ('move', actor)] + [('open', n) for n in G.neighbors(actor)] + [('move', n) for n in G.neighbors(actor)]:
+	for (action, next_position) in [('open', actor), ('move', actor)] + [('open', n) for n in neighbors_by_flow_rate(G, actor)] + [('move', n) for n in neighbors_by_flow_rate(G, actor)]:
 		if turn == 'me':
 			actor_steps_left = me_steps_left
 		elif turn == 'el':
@@ -118,6 +123,7 @@ def F(G, me, me_steps_left, el, el_steps_left, total_pressure_released):
 		next_total_pressure_released = total_pressure_released + pressure_added
 		if next_total_pressure_released > global_max:
 			global_max = next_total_pressure_released
+			print(f"global_max update: {global_max}")
 			best_me_path = me[:]
 			best_el_path = el[:]
 
